@@ -1,0 +1,1285 @@
+const CONFIG = {
+  payments: {
+    CASH: {
+      message:  'B',
+      amount:   'C',
+      quantity: 'D',
+      total:    'E'
+    },
+    DEBIT: {
+      message:  'F',
+      amount:   'G',
+      quantity: 'H',
+      total:    'I'
+    },
+    VISA: {
+      message:  'J',
+      amount:   'K',
+      quantity: 'L',
+      total:    'M'
+    },
+    MASTERCARD: {
+      message:  'N',
+      amount:   'O',
+      quantity: 'P',
+      total:    'Q'
+    }
+  }, 
+  calculator: {
+    cash_removal: {
+      id: 1,
+      amount:     `C`,
+      quantity:   `D`,
+      total:      `E`,
+      total_row:   51,
+      removal_row: 52,
+      sidebar : {
+        column: `B`,
+        cash_total_row:   35, 
+        coin_total_row:   46,
+        rolls_row:        48,
+        spare_change_row: 50
+      }
+    },
+    till_count: {
+      id: 2,
+      amount:      `O`,
+      quantity:    `P`,
+      total:       `Q`,
+      total_row:    51,
+      distance_row: 52,
+      sidebar : {
+        column: `N`,
+        cash_total_row:   35, 
+        coin_total_row:   46,
+        rolls_row:        48,
+        spare_change_row: 50
+      }
+    }
+  },
+  ranges: {
+    stock: {
+      amount_clear:   { start: 8, end: 18 },
+      quantity_clear: { start: 4, end: 18 },
+      overflow_clear: { start: 59,end: 72 },
+    },
+    job: {
+      amount_clear:   { start: 20, end: 22 },
+      quantity_clear: { start: 20, end: 22 },
+      overflow_clear: { start: 74, end: 78 },
+    },
+    calculator: {
+      non_roll: { start: 35, end: 44 },
+      roll:     { start: 46, end: 50 },
+      cash:     { start: 35, end: 39 },
+      coin:     { start: 40, end: 44 }
+    }
+  },
+  static_values : {
+    common_rates: [
+      { row: 4, value: 136.03 },
+      { row: 5, value: 184.10 },
+      { row: 6, value: 190.23 },
+      { row: 7, value: 210.54 },
+    ], 
+    currency: [
+      // Spare Change
+      { row: 40, value: 2},
+      { row: 41, value: 1},
+      { row: 42, value: .25},
+      { row: 43, value: .1},
+      { row: 44, value: .05},
+      // Rolls
+      { row: 46, value: 50},
+      { row: 47, value: 25},
+      { row: 48, value: 10},
+      { row: 49, value: 5},
+      { row: 50, value: 2},
+    ]
+  },
+  
+  cash_values : [100, 50, 20, 10, 5],
+
+  sum_row             :24,
+  stock_subtotal_row  :25,
+  job_subtotal_row    :26,
+  message_row         :27,
+  diff_row            :28,
+  diff_stock_row      :29,
+  spaceship_row       :30,
+
+  global_TOTAL              : 'F38',
+  global_QUANTITY           : 'F48',
+  global_spaceship_total    : 'F32',
+  global_total_formula      : `= 0`,
+  global_quantity_formula   : `= 0`,
+  global_spaceship_formula  : `= 0`,
+  
+  header_map: {
+    "AMOUNT"  : [ 'C2', 'G2', 'K2', 'O2',     // PAYMENT TYPES      
+                  'C34', 'O34'],              // CALCULATOR
+
+    "QUANTITY": [ 'D2', 'H2', 'L2', 'P2',     // PAYMENT TYPES   
+                  'D34', 'P34',               // CALCULATOR
+                  'F44'],                     // GLOBAL 
+
+    "TOTAL"   : [ 'E2', 'I2', 'M2', 'Q2',     // PAYMENT TYPES 
+                  'B24', 'F24', 'J24', 'N24', // PAYMENTS SUMS
+                  'E34', 'Q34',               // CALCULATOR TYPES 
+                  'C51', 'N51',               // CALCULATOR SUMS
+                  'F34'],                     // GLOBAL
+
+    "CASH" : ['B2'],
+    "DEBIT": ['F2'],
+    "VISA" : ['J2'],
+    "M/C"  : ['N2'],
+    "PAYMENT DISTRIBUTION": ['R2'],
+    "FEATURES":             ['R16'],
+
+    "ROLLS": ['C45',    //  CASH REMOVAL 
+              'B47',    //  CASH REMOVAL SIDEBAR
+              'O45',    //  TILL COUNT 
+              'N47'],   //  TILL COUNT SIDEBAR
+
+    // SIDEBAR
+    "CASH TOTAL"  : [ 'B34',    // CASH REMOVAL
+                      'N34'],   // TILL COUNT 
+
+    "COIN TOTAL"  : [ 'B45',    // CASH REMOVAL
+                      'N45'],   // TILL COUNT
+
+    "SPARE CHANGE": [ 'B49',    // CASH REMOVAL 
+                      'N49'],   // TILL COUNT
+
+    "REMOVAL AMOUNT:"   : ['B52'],
+    "DISTANCE FROM $350": ['N52'],
+    
+    "TILL COUNT" :        ['N36'],
+    "CASH REMOVAL"    :   ['B36'],
+    
+    "OVERFLOW" :          [`B57`],
+
+    "STOCK CART PAYMENTS":  [ 'C3',  'G3', 'K3',  'O3',    
+                              'C58', 'G58','K58', 'O58'],  // OVERFLOW
+    
+    "SPECIAL PAYMENTS":    [ 'C19', 'G19', 'K19', 'O19',
+                              'C73', 'G73', 'K73', 'O73'], // OVERFLOW 
+
+    // HIDDEN MENU
+    "STOCK":            ['B25', 'F25',  'J25',  'N25'],
+    "SPECIAL":          ['B26', 'F26',  'J26',  'N26'],
+    "diff b/w totals":  ['E27', 'I27',  'M27',  'Q27'],
+    "SPACESHIP TOTAL":  ['B30', 'F30',  'J30',  'N30'],
+    "GLOBAL SPACESHIP TOTAL" : ['F31'],
+    "UNRELEASED":                 ['R25'],
+    "RELEASED AS:  CASH":         ['R26'],
+    "RELEASED AS:  DEBIT":        ['R27'],
+    "RELEASED AS:  VISA":         ['R28'],
+    "RELEASED AS:  MASTERCARD":   ['R29'],
+    "<<<<   ENTER INPUT HERE":    ['R30'],
+    "diff b/w TOTAL - SPACESHIP": ['R31'],
+    "diff b/w STOCK - SPACESHIP": ['R32'],
+    "\"SPECIAL PAYMENTS\" includes payments received for RETAIL SERVICES, PARTIAL PAYMENTS, PASSES, and UNRELEASED vehicles." : ['B31'], 
+    "\"STOCK CART PAYMENTS\" includes payments received for RELEASED vehicles." : ['N31']
+
+  },
+
+  HELP_COLORS : {
+    UNRELEASED: '#F5A7F5', // pink 
+    CASH:       '#B7E1CD', // light green 2
+    DEBIT:      '#FFE599', // light yellow 2
+    VISA:       '#C9DAF8', // light cornflower blue 3
+    MASTERCARD: '#F4CCCC'  // light red 3
+  }
+};
+
+// --------------------- RESET --------------------------------------
+
+function clearCells(sheet) {
+  var clearRanges = [];
+  var formatRanges = [];
+
+  // PAYMENT TYPES INPUT
+  Object.values(CONFIG.payments).forEach(({ message, amount, quantity, total }) => {
+
+    // STOCK CART INPUT
+    var stock_amount            = `${amount}${CONFIG.ranges.stock.amount_clear.start}:${amount}${CONFIG.ranges.stock.amount_clear.end}`;
+    var stock_amount_overflow   = `${amount}${CONFIG.ranges.stock.overflow_clear.start}:${amount}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var stock_quantity          = `${quantity}${CONFIG.ranges.stock.quantity_clear.start}:${quantity}${CONFIG.ranges.stock.quantity_clear.end}`;
+    var stock_quantity_overflow = `${quantity}${CONFIG.ranges.stock.overflow_clear.start}:${quantity}${CONFIG.ranges.stock.overflow_clear.end}`;
+
+    // JOB CART INPUT
+    var job_amount              = `${amount}${CONFIG.ranges.job.amount_clear.start}:${amount}${CONFIG.ranges.job.amount_clear.end}`;
+    var job_amount_overflow     = `${amount}${CONFIG.ranges.job.overflow_clear.start}:${amount}${CONFIG.ranges.job.overflow_clear.end}`;
+    var job_quantity            = `${quantity}${CONFIG.ranges.job.quantity_clear.start}:${quantity}${CONFIG.ranges.job.quantity_clear.end}`;
+    var job_quantity_overflow   = `${quantity}${CONFIG.ranges.job.overflow_clear.start}:${quantity}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // MESSAGE BOX
+    var message_box = `${message}${CONFIG.message_row}`;
+    
+    // SPACESHIP SUM INPUT
+    var spaceship_total     = `${total}${CONFIG.spaceship_row}`;
+    var spaceship_quantity  = `${quantity}${CONFIG.spaceship_row}`;
+
+    clearRanges.push(stock_amount);
+    clearRanges.push(stock_amount_overflow);
+    clearRanges.push(stock_quantity);
+    clearRanges.push(stock_quantity_overflow);
+    clearRanges.push(job_amount);
+    clearRanges.push(job_amount_overflow);
+    clearRanges.push(job_quantity);
+    clearRanges.push(job_quantity_overflow);
+    clearRanges.push(message_box);
+    clearRanges.push(spaceship_total);
+    clearRanges.push(spaceship_quantity);
+    
+    formatRanges.push(stock_amount);
+    formatRanges.push(stock_amount_overflow);
+    formatRanges.push(job_amount);
+    formatRanges.push(job_amount_overflow);
+
+  });
+
+  // Clear calculator ranges
+  Object.values(CONFIG.calculator).forEach(col => {
+    clearRanges.push(`${col.quantity}${CONFIG.ranges.calculator.non_roll.start}:${col.quantity}${CONFIG.ranges.calculator.non_roll.end}`);
+    clearRanges.push(`${col.quantity}${CONFIG.ranges.calculator.roll.start}:${col.quantity}${CONFIG.ranges.calculator.roll.end}`);
+  });
+
+  clearRanges.forEach(r => sheet.getRange(r).clearContent());
+  formatRanges.forEach(r => sheet.getRange(r).setBackground('white'));
+}
+
+
+function resetValues(sheet) {  
+  CONFIG.static_values.common_rates.forEach(entry => {
+    Object.values(CONFIG.payments).forEach(({ amount }) => {
+      sheet.getRange(`${amount}${entry.row}`).setValue(entry.value);
+      sheet.getRange(`${amount}${entry.row}`).setBackground('#EFEFEF');
+    });
+  });
+
+  Object.values(CONFIG.calculator).forEach(calc => {
+    CONFIG.static_values.currency.forEach(entry => {
+      sheet.getRange(`${calc.amount}${entry.row}`).setValue(entry.value);
+    });
+  });
+
+  setHeaders(sheet);
+  setHelpDescriptions(sheet);
+}
+
+function setHeaders(sheet) {
+  Object.entries(CONFIG.header_map).forEach(([label, cells]) => {
+    cells.forEach(cell => {
+      sheet.getRange(cell).setValue(label);
+    });
+  });
+}
+
+function buildRichText(text, rules) {
+  const builder = SpreadsheetApp.newRichTextValue().setText(text);
+
+  Object.entries(rules).forEach(([word, color]) => {
+    let start = text.indexOf(word);
+    while (start !== -1) {
+      const end = start + word.length;
+      builder.setTextStyle(
+        start,
+        end,
+        SpreadsheetApp.newTextStyle().setForegroundColor(color).build()
+      );
+      start = text.indexOf(word, end); // next occurrence
+    }
+  });
+
+  return builder.build();
+}
+
+function setHelpDescriptions(sheet) {
+  const lightGreen1 = "#90EE90"; // payments
+  const lightCyan1  = "#76a5af"; // category words
+
+  const specialText =
+    "\"SPECIAL PAYMENTS\" includes payments received for RETAIL SERVICES, PARTIAL PAYMENTS, PASSES, and UNRELEASED vehicles.";
+  const stockText =
+    "\"STOCK CART PAYMENTS\" includes payments received for RELEASED vehicles.";
+
+  // Pull the cell addresses from CONFIG.header_map
+  const specialCellRef = CONFIG.header_map[specialText][0]; // 'B31'
+  const stockCellRef   = CONFIG.header_map[stockText][0];   // 'N31'
+
+  // SPECIAL PAYMENTS line (B31)
+  sheet.getRange(specialCellRef).setRichTextValue(
+    buildRichText(specialText, {
+      "payments":         lightGreen1, // lowercase only
+      "RETAIL SERVICES":  lightCyan1,
+      "PARTIAL PAYMENTS": lightCyan1,
+      "PASSES":           lightCyan1,
+      "UNRELEASED":       lightCyan1
+    })
+  );
+
+  // STOCK CART PAYMENTS line (N31)
+  sheet.getRange(stockCellRef).setRichTextValue(
+    buildRichText(stockText, {
+      "payments": lightGreen1,
+      "RELEASED": lightCyan1
+    })
+  );
+}
+
+
+function setTotalColumnFormula(sheet, start, end) {
+  for (let row = start; row <= end; row++) {
+    Object.values(CONFIG.payments).forEach(({ total, amount, quantity}) => {
+      const formula = `IF(ISBLANK(${quantity}${row}), ${amount}${row}, ${amount}${row}*${quantity}${row})`;
+      sheet.getRange(`${total}${row}`).setFormula(formula);
+    });
+  }
+}
+
+function setQuantityColumnFormula(sheet,start, end) {
+  for (let row = start; row <= end; row++) {
+    Object.values(CONFIG.payments).forEach(({ quantity, amount}) => {
+      const formula = `IF(ISBLANK(${amount}${row}),,1)`;
+      sheet.getRange(`${quantity}${row}`).setFormula(formula);
+    });
+  }
+}
+
+function resetFormulas(sheet) {
+  // Reset COMMON RATES formulas ------------------
+  Object.values(CONFIG.payments).forEach(payment => {
+    for (let row = CONFIG.static_values.common_rates[0].row; row <= CONFIG.static_values.common_rates[CONFIG.static_values.common_rates.length -1].row; row++){
+      const formula = `=${payment.amount}${row}*${payment.quantity}${row}`;
+      sheet.getRange(`${payment.total}${row}`).setFormula(formula);
+    }
+  });
+    
+  // Reset TOTAL column formulas -----------------
+  // Stock Total Range
+  setTotalColumnFormula(sheet, CONFIG.ranges.stock.amount_clear.start, CONFIG.ranges.stock.amount_clear.end);
+  // Stock Total Range (overflow)
+  setTotalColumnFormula(sheet, CONFIG.ranges.stock.overflow_clear.start, CONFIG.ranges.stock.overflow_clear.end);
+  // Job Total Range
+  setTotalColumnFormula(sheet, CONFIG.ranges.job.amount_clear.start, CONFIG.ranges.job.amount_clear.end);
+  // Job Total Range (overflow)
+  setTotalColumnFormula(sheet, CONFIG.ranges.job.overflow_clear.start, CONFIG.ranges.job.overflow_clear.end);
+  
+  // Reset QUANTITY column formulas ------------------
+  // Stock Quantity Range 
+  setQuantityColumnFormula(sheet, CONFIG.ranges.stock.amount_clear.start, CONFIG.ranges.stock.amount_clear.end);
+  // Stock Quantity Range (overflow)
+  setQuantityColumnFormula(sheet, CONFIG.ranges.stock.overflow_clear.start, CONFIG.ranges.stock.overflow_clear.end);
+  // Job Quantity Range
+  setQuantityColumnFormula(sheet, CONFIG.ranges.job.amount_clear.start, CONFIG.ranges.job.amount_clear.end);
+  // Job Quantity Range (overflow) 
+  setQuantityColumnFormula(sheet, CONFIG.ranges.job.overflow_clear.start, CONFIG.ranges.job.overflow_clear.end);
+  
+
+  // Reset SUM formulas -------------------------
+  Object.values(CONFIG.payments).forEach(payment => {
+    // Define Total Ranges
+    var stock_total = `${payment.total}${CONFIG.ranges.stock.quantity_clear.start}:${payment.total}${CONFIG.ranges.stock.quantity_clear.end}, ${payment.total}${CONFIG.ranges.stock.overflow_clear.start}:${payment.total}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var job_total = `${payment.total}${CONFIG.ranges.job.quantity_clear.start}:${payment.total}${CONFIG.ranges.job.quantity_clear.end}, ${payment.total}${CONFIG.ranges.job.overflow_clear.start}:${payment.total}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // Define Quantity Ranges
+    var stock_quantity = `${payment.quantity}${CONFIG.ranges.stock.quantity_clear.start}:${payment.quantity}${CONFIG.ranges.stock.quantity_clear.end}, ${payment.quantity}${CONFIG.ranges.stock.overflow_clear.start}:${payment.quantity}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var job_quantity = `${payment.quantity}${CONFIG.ranges.job.quantity_clear.start}:${payment.quantity}${CONFIG.ranges.job.quantity_clear.end}, ${payment.quantity}${CONFIG.ranges.job.overflow_clear.start}:${payment.quantity}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // TOTAL sum formula
+    var payment_total_formula     = `=SUM(${stock_total}, ${job_total})`;
+    var stock_subtotal_formula    = `=SUM(${stock_total})`;
+    var job_subtotal_formula      = `=SUM(${job_total})`;
+
+    // Quantity Sum formula
+    var payment_quantity_formula  = `=SUM(${stock_quantity}, ${job_quantity})`;
+    var stock_quantity_formula    = `=SUM(${stock_quantity})`;
+    var job_quantity_formula      = `=SUM(${job_quantity})`;
+
+    // Set TOTAL
+    sheet.getRange(`${payment.total}${CONFIG.sum_row}`).setFormula(payment_total_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.sum_row}`).setFormula(payment_quantity_formula);
+    // Set Stock SUBTOTAL
+    sheet.getRange(`${payment.total}${CONFIG.stock_subtotal_row}`).setFormula(stock_subtotal_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.stock_subtotal_row}`).setFormula(stock_quantity_formula);
+    // Set Job SUBTOTAL
+    sheet.getRange(`${payment.total}${CONFIG.job_subtotal_row}`).setFormula(job_subtotal_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.job_subtotal_row}`).setFormula(job_quantity_formula);
+
+    // Set Differences
+    // diff formulas
+    var global_diff    = `=${payment.total}${CONFIG.sum_row}-${payment.total}${CONFIG.spaceship_row}`;
+    var stock_diff     = `=${payment.total}${CONFIG.stock_subtotal_row}-${payment.total}${CONFIG.spaceship_row}`;
+    sheet.getRange(`${payment.total}${CONFIG.diff_row}`).setFormula(global_diff);
+    sheet.getRange(`${payment.total}${CONFIG.diff_stock_row}`).setFormula(stock_diff);    
+
+    CONFIG.global_total_formula += `+${payment.total}${CONFIG.sum_row}`;
+    CONFIG.global_quantity_formula += `+${payment.quantity}${CONFIG.sum_row}`;
+    CONFIG.global_spaceship_formula += `+${payment.total}${CONFIG.spaceship_row}`;
+  });
+
+  // Calculator ---------------------------
+  Object.values(CONFIG.calculator).forEach(calc => {
+    // Rolls
+    for (let row = CONFIG.ranges.calculator.roll.start; row <= CONFIG.ranges.calculator.roll.end; row++) {
+      const formula = `=${calc.amount}${row}*${calc.quantity}${row}`;
+      sheet.getRange(`${calc.total}${row}`).setFormula(formula);
+    }
+    // Coins
+    for (let row = CONFIG.ranges.calculator.coin.start; row <= CONFIG.ranges.calculator.coin.end; row++) {
+      const formula = `=${calc.amount}${row}*${calc.quantity}${row}`;
+      sheet.getRange(`${calc.total}${row}`).setFormula(formula);
+    }
+    // CASH
+    for (let row = CONFIG.ranges.calculator.cash.start; row <= CONFIG.ranges.calculator.cash.end; row++) {
+      const offset = row - CONFIG.ranges.calculator.cash.start;
+      let val;
+      
+      if(calc.id == 1) {
+        val = CONFIG.cash_values[offset];
+        const formula = `=${val}*${calc.quantity}${row}`;
+        sheet.getRange(`${calc.total}${row}`).setFormula(formula);
+      }
+      if (calc.id == 2) {
+        val = CONFIG.cash_values[CONFIG.cash_values.length - 1 - offset];
+        const formula = `=${val}*${calc.quantity}${row}`;
+        sheet.getRange(`${calc.total}${row}`).setFormula(formula);
+      }
+    }
+  });
+
+  // CALCULATOR (Cash Removal)
+  // TOTAL:
+  sheet.getRange(`${CONFIG.calculator.cash_removal.total}${CONFIG.calculator.cash_removal.total_row}`).setFormula(`=SUM(${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.non_roll.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.non_roll.end}, ${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.end})`);
+  // REMOVAL AMOUNT:
+  sheet.getRange(`${CONFIG.calculator.cash_removal.total}${CONFIG.calculator.cash_removal.removal_row}`).setFormula(`=${CONFIG.payments.CASH.total}${CONFIG.sum_row}-${CONFIG.calculator.cash_removal.total}${CONFIG.calculator.cash_removal.total_row}`);
+  // SIDEBAR:
+  // CASH TOTAL
+  sheet.getRange(`${CONFIG.calculator.cash_removal.sidebar.column}${CONFIG.calculator.cash_removal.sidebar.cash_total_row}`).setFormula(`=SUM(${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.cash.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.cash.end})`);
+  // COIN TOTAL
+  sheet.getRange(`${CONFIG.calculator.cash_removal.sidebar.column}${CONFIG.calculator.cash_removal.sidebar.coin_total_row}`).setFormula(`=SUM(${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.coin.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.coin.end},${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.end})`);
+  // ROLLS
+  sheet.getRange(`${CONFIG.calculator.cash_removal.sidebar.column}${CONFIG.calculator.cash_removal.sidebar.rolls_row}`).setFormula(`=SUM(${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.roll.end})`);
+  // SPARE CHANGE
+  sheet.getRange(`${CONFIG.calculator.cash_removal.sidebar.column}${CONFIG.calculator.cash_removal.sidebar.spare_change_row}`).setFormula(`=SUM(${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.coin.start}:${CONFIG.calculator.cash_removal.total}${CONFIG.ranges.calculator.coin.end})`);
+
+  
+  // CALCULATOR (Till Count)
+  // TOTAL:
+  sheet.getRange(`${CONFIG.calculator.till_count.total}${CONFIG.calculator.till_count.total_row}`).setFormula(`=SUM(${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.non_roll.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.non_roll.end}, ${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.end})`);
+  // DISTANCE:
+  sheet.getRange(`${CONFIG.calculator.till_count.total}${CONFIG.calculator.till_count.distance_row}`).setFormula(`=IF(COUNTA(${CONFIG.calculator.till_count.quantity}${CONFIG.ranges.calculator.non_roll.start}:${CONFIG.calculator.till_count.quantity}${CONFIG.ranges.calculator.non_roll.end}, ${CONFIG.calculator.till_count.quantity}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.till_count.quantity}${CONFIG.ranges.calculator.roll.end}), ${CONFIG.calculator.till_count.total}${CONFIG.calculator.till_count.total_row}-350, "☺")`);
+  // SIDEBAR:
+  // CASH TOTAL
+  sheet.getRange(`${CONFIG.calculator.till_count.sidebar.column}${CONFIG.calculator.till_count.sidebar.cash_total_row}`).setFormula(`=SUM(${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.cash.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.cash.end})`);
+  // COIN TOTAL
+  sheet.getRange(`${CONFIG.calculator.till_count.sidebar.column}${CONFIG.calculator.till_count.sidebar.coin_total_row}`).setFormula(`=SUM(${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.coin.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.coin.end},${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.end})`);
+  // ROLLS
+  sheet.getRange(`${CONFIG.calculator.till_count.sidebar.column}${CONFIG.calculator.till_count.sidebar.rolls_row}`).setFormula(`=SUM(${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.roll.end})`);
+  // SPARE CHANGE
+  sheet.getRange(`${CONFIG.calculator.till_count.sidebar.column}${CONFIG.calculator.till_count.sidebar.spare_change_row}`).setFormula(`=SUM(${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.coin.start}:${CONFIG.calculator.till_count.total}${CONFIG.ranges.calculator.coin.end})`);
+
+  // GLOBAL sum ------------------------------
+  sheet.getRange(CONFIG.global_TOTAL).setFormula(CONFIG.global_total_formula);
+  sheet.getRange(CONFIG.global_QUANTITY).setFormula(CONFIG.global_quantity_formula);  
+  sheet.getRange(CONFIG.global_spaceship_total).setFormula(CONFIG.global_spaceship_formula);
+}
+
+
+function reset() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.collapseAllRowGroups();
+  clearCells(sheet);
+  resetValues(sheet);
+  resetFormulas(sheet);
+}
+
+
+
+// ------------------------ CLEAR ---------------------------------------
+
+function clearCells(sheet) {
+  var clearRanges = [];
+  var formatRanges = [];
+
+  // PAYMENT TYPES INPUT
+  Object.values(CONFIG.payments).forEach(({ message, amount, quantity, total }) => {
+
+    // STOCK CART INPUT
+    var stock_amount            = `${amount}${CONFIG.ranges.stock.amount_clear.start}:${amount}${CONFIG.ranges.stock.amount_clear.end}`;
+    var stock_amount_overflow   = `${amount}${CONFIG.ranges.stock.overflow_clear.start}:${amount}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var stock_quantity          = `${quantity}${CONFIG.ranges.stock.quantity_clear.start}:${quantity}${CONFIG.ranges.stock.quantity_clear.end}`;
+    var stock_quantity_overflow = `${quantity}${CONFIG.ranges.stock.overflow_clear.start}:${quantity}${CONFIG.ranges.stock.overflow_clear.end}`;
+
+    // JOB CART INPUT
+    var job_amount              = `${amount}${CONFIG.ranges.job.amount_clear.start}:${amount}${CONFIG.ranges.job.amount_clear.end}`;
+    var job_amount_overflow     = `${amount}${CONFIG.ranges.job.overflow_clear.start}:${amount}${CONFIG.ranges.job.overflow_clear.end}`;
+    var job_quantity            = `${quantity}${CONFIG.ranges.job.quantity_clear.start}:${quantity}${CONFIG.ranges.job.quantity_clear.end}`;
+    var job_quantity_overflow   = `${quantity}${CONFIG.ranges.job.overflow_clear.start}:${quantity}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // MESSAGE BOX
+    var message_box = `${message}${CONFIG.message_row}`;
+    
+    // SPACESHIP SUM INPUT
+    var spaceship_total     = `${total}${CONFIG.spaceship_row}`;
+    var spaceship_quantity  = `${quantity}${CONFIG.spaceship_row}`;
+
+    clearRanges.push(stock_amount);
+    clearRanges.push(stock_amount_overflow);
+    clearRanges.push(stock_quantity);
+    clearRanges.push(stock_quantity_overflow);
+    clearRanges.push(job_amount);
+    clearRanges.push(job_amount_overflow);
+    clearRanges.push(job_quantity);
+    clearRanges.push(job_quantity_overflow);
+    clearRanges.push(message_box);
+    clearRanges.push(spaceship_total);
+    clearRanges.push(spaceship_quantity);
+    
+    formatRanges.push(stock_amount);
+    formatRanges.push(stock_amount_overflow);
+    formatRanges.push(job_amount);
+    formatRanges.push(job_amount_overflow);
+
+  });
+
+  // Clear calculator ranges
+  Object.values(CONFIG.calculator).forEach(col => {
+    clearRanges.push(`${col.quantity}${CONFIG.ranges.calculator.non_roll.start}:${col.quantity}${CONFIG.ranges.calculator.non_roll.end}`);
+    clearRanges.push(`${col.quantity}${CONFIG.ranges.calculator.roll.start}:${col.quantity}${CONFIG.ranges.calculator.roll.end}`);
+  });
+
+  clearRanges.forEach(r => sheet.getRange(r).clearContent());
+  formatRanges.forEach(r => sheet.getRange(r).setBackground('white'));
+
+  // Added for CLEAR functionality
+  CONFIG.static_values.common_rates.forEach(entry => {
+    Object.values(CONFIG.payments).forEach(({ amount }) => {
+      sheet.getRange(`${amount}${entry.row}`).setValue(entry.value);
+      sheet.getRange(`${amount}${entry.row}`).setBackground('gray');
+    });
+  });
+}
+
+function resetFormulas(sheet) {
+  // Reset COMMON RATES formulas ------------------
+  Object.values(CONFIG.payments).forEach(payment => {
+    for (let row = CONFIG.static_values.common_rates[0].row; row <= CONFIG.static_values.common_rates[CONFIG.static_values.common_rates.length -1].row; row++){
+      const formula = `=${payment.amount}${row}*${payment.quantity}${row}`;
+      sheet.getRange(`${payment.total}${row}`).setFormula(formula);
+    }
+  });
+    
+  // Reset TOTAL column formulas -----------------
+  // Stock Total Range
+  setTotalColumnFormula(sheet, CONFIG.ranges.stock.amount_clear.start, CONFIG.ranges.stock.amount_clear.end);
+  // Stock Total Range (overflow)
+  setTotalColumnFormula(sheet, CONFIG.ranges.stock.overflow_clear.start, CONFIG.ranges.stock.overflow_clear.end);
+  // Job Total Range
+  setTotalColumnFormula(sheet, CONFIG.ranges.job.amount_clear.start, CONFIG.ranges.job.amount_clear.end);
+  // Job Total Range (overflow)
+  setTotalColumnFormula(sheet, CONFIG.ranges.job.overflow_clear.start, CONFIG.ranges.job.overflow_clear.end);
+  
+  // Reset QUANTITY column formulas ------------------
+  // Stock Quantity Range 
+  setQuantityColumnFormula(sheet, CONFIG.ranges.stock.amount_clear.start, CONFIG.ranges.stock.amount_clear.end);
+  // Stock Quantity Range (overflow)
+  setQuantityColumnFormula(sheet, CONFIG.ranges.stock.overflow_clear.start, CONFIG.ranges.stock.overflow_clear.end);
+  // Job Quantity Range
+  setQuantityColumnFormula(sheet, CONFIG.ranges.job.amount_clear.start, CONFIG.ranges.job.amount_clear.end);
+  // Job Quantity Range (overflow) 
+  setQuantityColumnFormula(sheet, CONFIG.ranges.job.overflow_clear.start, CONFIG.ranges.job.overflow_clear.end);
+  
+
+  // Reset SUM formulas -------------------------
+  Object.values(CONFIG.payments).forEach(payment => {
+    // Define Total Ranges
+    var stock_total = `${payment.total}${CONFIG.ranges.stock.quantity_clear.start}:${payment.total}${CONFIG.ranges.stock.quantity_clear.end}, ${payment.total}${CONFIG.ranges.stock.overflow_clear.start}:${payment.total}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var job_total = `${payment.total}${CONFIG.ranges.job.quantity_clear.start}:${payment.total}${CONFIG.ranges.job.quantity_clear.end}, ${payment.total}${CONFIG.ranges.job.overflow_clear.start}:${payment.total}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // Define Quantity Ranges
+    var stock_quantity = `${payment.quantity}${CONFIG.ranges.stock.quantity_clear.start}:${payment.quantity}${CONFIG.ranges.stock.quantity_clear.end}, ${payment.quantity}${CONFIG.ranges.stock.overflow_clear.start}:${payment.quantity}${CONFIG.ranges.stock.overflow_clear.end}`;
+    var job_quantity = `${payment.quantity}${CONFIG.ranges.job.quantity_clear.start}:${payment.quantity}${CONFIG.ranges.job.quantity_clear.end}, ${payment.quantity}${CONFIG.ranges.job.overflow_clear.start}:${payment.quantity}${CONFIG.ranges.job.overflow_clear.end}`;
+
+    // TOTAL sum formula
+    var payment_total_formula     = `=SUM(${stock_total}, ${job_total})`;
+    var stock_subtotal_formula    = `=SUM(${stock_total})`;
+    var job_subtotal_formula      = `=SUM(${job_total})`;
+
+    // Quantity Sum formula
+    var payment_quantity_formula  = `=SUM(${stock_quantity}, ${job_quantity})`;
+    var stock_quantity_formula    = `=SUM(${stock_quantity})`;
+    var job_quantity_formula      = `=SUM(${job_quantity})`;
+
+    // Set TOTAL
+    sheet.getRange(`${payment.total}${CONFIG.sum_row}`).setFormula(payment_total_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.sum_row}`).setFormula(payment_quantity_formula);
+    // Set Stock SUBTOTAL
+    sheet.getRange(`${payment.total}${CONFIG.stock_subtotal_row}`).setFormula(stock_subtotal_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.stock_subtotal_row}`).setFormula(stock_quantity_formula);
+    // Set Job SUBTOTAL
+    sheet.getRange(`${payment.total}${CONFIG.job_subtotal_row}`).setFormula(job_subtotal_formula);
+    sheet.getRange(`${payment.quantity}${CONFIG.job_subtotal_row}`).setFormula(job_quantity_formula);
+
+    // Set Differences
+    // diff formulas
+    var global_diff    = `=${payment.total}${CONFIG.sum_row}-${payment.total}${CONFIG.spaceship_row}`;
+    var stock_diff     = `=${payment.total}${CONFIG.stock_subtotal_row}-${payment.total}${CONFIG.spaceship_row}`;
+    sheet.getRange(`${payment.total}${CONFIG.diff_row}`).setFormula(global_diff);
+    sheet.getRange(`${payment.total}${CONFIG.diff_stock_row}`).setFormula(stock_diff);    
+
+    CONFIG.global_total_formula += `+${payment.total}${CONFIG.sum_row}`;
+    CONFIG.global_quantity_formula += `+${payment.quantity}${CONFIG.sum_row}`;
+    CONFIG.global_spaceship_formula += `+${payment.total}${CONFIG.spaceship_row}`;
+  });
+
+  // GLOBAL sum ------------------------------
+  sheet.getRange(CONFIG.global_TOTAL).setFormula(CONFIG.global_total_formula);
+  sheet.getRange(CONFIG.global_QUANTITY).setFormula(CONFIG.global_quantity_formula);  
+  sheet.getRange(CONFIG.global_spaceship_total).setFormula(CONFIG.global_spaceship_formula);
+}
+
+
+
+function clear() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.collapseAllRowGroups();
+  clearCells(sheet);
+}
+
+// ------------------------ HELP ------------------------------
+
+function round2(x) {
+  return Math.round(x * 100) / 100;
+}
+
+
+/**
+ * Compute stock subtotal minus spaceship subtotal for each payment type.
+ *
+ * Returns:
+ * {
+ *   CASH:       { payment, stock, spaceship, diff },
+ *   DEBIT:      { payment, stock, spaceship, diff },
+ *   VISA:       { payment, stock, spaceship, diff },
+ *   MASTERCARD: { payment, stock, spaceship, diff }
+ * }
+ */
+function getStockDiffs(sheet) {
+  var diffs = {};
+
+  Object.entries(CONFIG.payments).forEach(([name, payment]) => {
+    var totalCol = payment.total;
+
+    var stockSubtotal = sheet.getRange(`${totalCol}${CONFIG.stock_subtotal_row}`).getValue();
+    var spaceshipSubtotal = sheet.getRange(`${totalCol}${CONFIG.spaceship_row}`).getValue();
+
+    diffs[name] = {
+      payment:    payment,
+      stock:      stockSubtotal,
+      spaceship:  spaceshipSubtotal,
+      diff:       stockSubtotal - spaceshipSubtotal
+    };
+  });
+
+  return diffs;
+}
+
+
+/**
+ * Build a list of STOCK rows (including overflow) for each payment type.
+ *
+ * Each entry looks like:
+ * {
+ *   typeName: "CASH" | "DEBIT" | "VISA" | "MASTERCARD",
+ *   payment:  CONFIG.payments[typeName],
+ *   row:      row index (number),
+ *   amount:   value in AMOUNT column for that type/row,
+ *   quantity: value in QUANTITY column for that type/row,
+ *   total:    value in TOTAL column for that type/row
+ * }
+ *
+ * We treat a row as "active" if quantity is non-empty and numeric.
+ * (That corresponds to actual transactions, not just prefilled rates.)
+ */
+function buildStockRows(sheet) {
+  var rows = [];
+  var stockRange = CONFIG.ranges.stock;
+
+  Object.entries(CONFIG.payments).forEach(([name, payment]) => {
+    var amountCol   = payment.amount;
+    var quantityCol = payment.quantity;
+    var totalCol    = payment.total;
+
+    // ---- Main stock block (e.g. rows 8–18) ----
+    for (var r = stockRange.quantity_clear.start; r <= stockRange.quantity_clear.end; r++) {
+      var amount   = sheet.getRange(`${amountCol}${r}`).getValue();
+      var quantity = sheet.getRange(`${quantityCol}${r}`).getValue();
+      var total    = sheet.getRange(`${totalCol}${r}`).getValue();
+
+      // Only consider rows with a meaningful quantity (actual transactions)
+      if (quantity !== "" && !isNaN(quantity) && quantity != 0) {
+        rows.push({
+          typeName: name,
+          payment:  payment,
+          row:      r,
+          amount:   amount,
+          quantity: quantity,
+          total:    total
+        });
+      }
+    }
+
+    // ---- Stock overflow block (e.g. rows 59–72) ----
+    for (var r = stockRange.overflow_clear.start; r <= stockRange.overflow_clear.end; r++) {
+      var amountO   = sheet.getRange(`${amountCol}${r}`).getValue();
+      var quantityO = sheet.getRange(`${quantityCol}${r}`).getValue();
+      var totalO    = sheet.getRange(`${totalCol}${r}`).getValue();
+
+      if (quantityO !== "" && !isNaN(quantityO) && quantityO != 0) {
+        rows.push({
+          typeName: name,
+          payment:  payment,
+          row:      r,
+          amount:   amountO,
+          quantity: quantityO,
+          total:    totalO
+        });
+      }
+    }
+  });
+
+  return rows;
+}
+
+
+/**
+ * Build a list of UNIT transactions from the stock rows.
+ *
+ * Each row { amount, quantity } becomes `quantity` units of size `amount`.
+ *
+ * Each unit is:
+ * {
+ *   typeName: "CASH" | "DEBIT" | "VISA" | "MASTERCARD",
+ *   payment:  CONFIG.payments[typeName],
+ *   row:      row index in the sheet,
+ *   amount:   numeric value of a *single* transaction,
+ *   unitIndex: 1-based index of this unit within the row (for debugging)
+ * }
+ */
+function buildStockUnits(stockRows) {
+  var units = [];
+
+  stockRows.forEach(function(r) {
+    var qty = Number(r.quantity);
+    var amt = Number(r.amount);
+
+    // ignore weird/non-positive quantities
+    if (!qty || isNaN(qty) || qty <= 0) return;
+    if (isNaN(amt)) return;
+
+    // conceptually: row represents qty separate transactions of value amt
+    for (var k = 1; k <= qty; k++) {
+      units.push({
+        typeName:  r.typeName,
+        payment:   r.payment,
+        row:       r.row,
+        amount:    amt,
+        unitIndex: k
+      });
+    }
+  });
+
+  return units;
+}
+
+
+
+/**
+ * Reconcile per-type diffs using unit transactions.
+ *
+ * diffs: {
+ *   CASH: { payment, stock, spaceship, diff },
+ *   ...
+ * }
+ * units: [
+ *   { typeName, payment, row, amount, unitIndex },
+ *   ...
+ * ]
+ *
+ * Returns either:
+ *   {
+ *     unreleasedUnits: [unit, ...],
+ *     misclassMoves:   [{ from, to, unit }, ...],
+ *     residual:        { typeName: residualDiff }
+ *   }
+ * or null if no explanation exists.
+ */
+function reconcileUnits(diffs, units) {
+  var typeNames = Object.keys(diffs);
+  var epsilon = 0.0001;
+
+  // Initial residual: stock - spaceship for each type
+  var initialRes = {};
+  typeNames.forEach(function(name) {
+    initialRes[name] = Number(diffs[name].diff) || 0;
+  });
+
+  // Sort units by amount descending to prune faster
+  units = units.slice().sort(function(a, b) {
+    return (b.amount || 0) - (a.amount || 0);
+  });
+
+  function hasPositive(res) {
+    return typeNames.some(function(t) { return res[t] > epsilon; });
+  }
+
+  function isAllZero(res) {
+    return typeNames.every(function(t) { return Math.abs(res[t]) < epsilon; });
+  }
+
+  // Score for non-perfect solutions: how much unexplained spaceship-only we have
+  function residualScore(res) {
+    var s = 0;
+    typeNames.forEach(function(t) {
+      if (res[t] < -epsilon) {
+        s += Math.abs(res[t]);
+      }
+    });
+    return s;
+  }
+
+  function cloneRes(res) {
+    var c = {};
+    typeNames.forEach(function(t) { c[t] = res[t]; });
+    return c;
+  }
+
+  var bestPerfect = null;         // residual ≈ 0
+  var foundPerfect = false;
+  var bestNonPerfect = null;      // residual <= 0, not all zero
+  var bestNonPerfectScore = Infinity;
+
+  function recordCandidate(res, unreleasedIdxs, misclassIdxs) {
+    if (hasPositive(res)) return;   // not valid
+
+    var snapshot = {
+      unreleasedIdxs: unreleasedIdxs.slice(),
+      misclassIdxs:   misclassIdxs.slice(),
+      residual:       cloneRes(res)
+    };
+
+    if (isAllZero(res)) {
+      // Perfect reconciliation
+      if (!bestPerfect) {
+        bestPerfect = snapshot;
+      }
+      foundPerfect = true;
+    } else {
+      // Non-perfect: all residuals <= 0, but some negative
+      var score = residualScore(res);
+      if (score < bestNonPerfectScore) {
+        bestNonPerfectScore = score;
+        bestNonPerfect = snapshot;
+      }
+    }
+  }
+
+  /**
+   * DFS over units:
+   *   idx            - current unit index
+   *   res            - current residual map
+   *   unreleasedIdxs - array of unit indices treated as UNRELEASED
+   *   misclassIdxs   - array of { idx, from, to }
+   */
+  function dfs(idx, res, unreleasedIdxs, misclassIdxs) {
+    // If we've already found a perfect solution, we can stop exploring.
+    if (foundPerfect) return;
+
+    // If no more units OR no positive residual left, treat as leaf candidate.
+    if (idx >= units.length || !hasPositive(res)) {
+      recordCandidate(res, unreleasedIdxs, misclassIdxs);
+      return;
+    }
+
+    var u = units[idx];
+    var t = u.typeName;
+    var amt = Number(u.amount) || 0;
+
+    if (amt <= 0) {
+      // Skip weird zero/non-positive units
+      dfs(idx + 1, res, unreleasedIdxs, misclassIdxs);
+      return;
+    }
+
+    // --- OPTION 1: unit is OK (no error) ---
+    dfs(idx + 1, res, unreleasedIdxs, misclassIdxs);
+    if (foundPerfect) return;
+
+    // --- OPTION 2: UNRELEASED (have receipt, not released) ---
+    // Only require that this type currently has some positive mismatch.
+    // It's okay if we "overshoot" and make it negative; leftover negative
+    // will be treated as spaceship-only later (for non-perfect solutions).
+    if (res[t] > epsilon) {
+      var res2 = cloneRes(res);
+      res2[t] -= amt;
+      unreleasedIdxs.push(idx);
+      dfs(idx + 1, res2, unreleasedIdxs, misclassIdxs);
+      unreleasedIdxs.pop();
+      if (foundPerfect) return;
+    }
+
+    // --- OPTION 3: MISCLASSIFIED to some other type 'to' ---
+    for (var i = 0; i < typeNames.length; i++) {
+      if (foundPerfect) return;
+
+      var to = typeNames[i];
+      if (to === t) continue;
+
+      // Heuristic: only move from a type that currently has
+      // positive residual to one that has negative residual.
+      if (res[t] <= epsilon) continue;
+      if (res[to] >= -epsilon) continue;
+
+      var res3 = cloneRes(res);
+      res3[t]  -= amt;
+      res3[to] += amt;
+
+      // No extra sign checks: we allow overshoot here; it will be
+      // filtered by the final hasPositive()/isAllZero logic.
+      misclassIdxs.push({ idx: idx, from: t, to: to });
+      dfs(idx + 1, res3, unreleasedIdxs, misclassIdxs);
+      misclassIdxs.pop();
+    }
+  }
+
+  // Start DFS
+  dfs(0, initialRes, [], []);
+
+  var chosen = null;
+  if (bestPerfect) {
+    chosen = bestPerfect;              // prefer exact reconciliation
+  } else if (bestNonPerfect) {
+    chosen = bestNonPerfect;           // fallback: minimal spaceship-only residual
+  } else {
+    return null;                       // no explanation found
+  }
+
+  // Convert index-based solution to actual unit objects
+  var unreleasedUnits = chosen.unreleasedIdxs.map(function(i) {
+    return units[i];
+  });
+
+  var misclassMoves = chosen.misclassIdxs.map(function(m) {
+    return {
+      from: m.from,
+      to:   m.to,
+      unit: units[m.idx]
+    };
+  });
+
+  return {
+    unreleasedUnits: unreleasedUnits,
+    misclassMoves:   misclassMoves,
+    residual:        chosen.residual
+  };
+}
+
+
+
+/**
+ * Aggregate unreleased, misclassified, and missing-receipt info per payment type.
+ *
+ * Returns:
+ * {
+ *   CASH: {
+ *     payment: CONFIG.payments.CASH,
+ *     unreleased: { totalAmount, count, rows: { [row]: true } },
+ *     misclassFrom: {
+ *       VISA: { totalAmount, count, rows: { [row]: true } },
+ *       ...
+ *     },
+ *     missingReceipts: { totalAmount }
+ *   },
+ *   ...
+ * }
+ */
+function buildPerTypeIssues(diffs, solution) {
+  var perType = {};
+
+  // Initialize base structure for each payment type
+  Object.entries(CONFIG.payments).forEach(function([name, payment]) {
+    perType[name] = {
+      payment: payment,
+      unreleased: {
+        totalAmount: 0,
+        count: 0,
+        rows: {}     // map row -> true
+      },
+      misclassFrom: {}, // toType -> { totalAmount, count, rows }
+      missingReceipts: {
+        totalAmount: 0
+      }
+    };
+  });
+
+  // Unreleased units
+  solution.unreleasedUnits.forEach(function(unit) {
+    var t = unit.typeName;
+    if (!perType[t]) return;
+
+    var issues = perType[t].unreleased;
+    issues.count += 1;
+    issues.totalAmount += Number(unit.amount) || 0;
+    issues.rows[unit.row] = true;
+  });
+
+  // Misclassified units (from -> to)
+  solution.misclassMoves.forEach(function(move) {
+    var from = move.from;
+    var to   = move.to;
+    var unit = move.unit;
+
+    if (!perType[from]) return;
+
+    var misFrom = perType[from].misclassFrom;
+    if (!misFrom[to]) {
+      misFrom[to] = {
+        totalAmount: 0,
+        count: 0,
+        rows: {}
+      };
+    }
+    misFrom[to].count += 1;
+    misFrom[to].totalAmount += Number(unit.amount) || 0;
+    misFrom[to].rows[unit.row] = true;
+  });
+
+  // Missing receipts / spaceship-only (from residual < 0)
+  Object.keys(perType).forEach(function(name) {
+    var res = solution.residual && solution.residual[name];
+    if (typeof res === 'number' && res < -0.0001) {
+      perType[name].missingReceipts.totalAmount = -res;
+    }
+  });
+
+  return perType;
+}
+
+function colorUnreleased(sheet, perTypeIssues) {
+  Object.entries(perTypeIssues).forEach(function([typeName, issues]) {
+    var payment = issues.payment;
+    var amountCol = payment.amount;
+    var totalCol  = payment.total;
+
+    var rowsMap = issues.unreleased.rows;
+    Object.keys(rowsMap).forEach(function(rowStr) {
+      var r = parseInt(rowStr, 10);
+      if (!r) return;
+      sheet.getRange(amountCol + r).setBackground(CONFIG.HELP_COLORS.UNRELEASED);
+    });
+  });
+}
+
+
+function colorMisclassified(sheet, perTypeIssues) {
+  Object.entries(perTypeIssues).forEach(function([fromType, issues]) {
+    var payment = issues.payment;
+    var amountCol = payment.amount;
+
+    var misFrom = issues.misclassFrom;
+    Object.entries(misFrom).forEach(function([toType, info]) {
+      var color = CONFIG.HELP_COLORS[toType]; // color of wrong type
+      if (!color) return;
+
+      Object.keys(info.rows).forEach(function(rowStr) {
+        var r = parseInt(rowStr, 10);
+        if (!r) return;
+        sheet.getRange(amountCol + r).setBackground(color);
+      });
+    });
+  });
+}
+
+function buildPaymentMessage(typeName, issues) {
+  var parts = [];
+
+  // 1) Unreleased
+  if (issues.unreleased.count > 0) {
+    var amtUnr = round2(issues.unreleased.totalAmount);
+    parts.push(
+      issues.unreleased.count + " unreleased " + typeName +
+      " txns ≈ $" + amtUnr + ". Release highlighted rows."
+    );
+  }
+
+  // 2) Misclassified FROM this type
+  var mis = issues.misclassFrom;
+  var misKeys = Object.keys(mis);
+  misKeys.forEach(function(toType) {
+    var info = mis[toType];
+    var amt = round2(info.totalAmount);
+    parts.push(
+      "Some " + typeName + " txns ≈ $" + amt +
+      " released as " + toType + ". Fix type on spaceship."
+    );
+  });
+
+  // 3) Missing receipts / spaceship-only
+  if (issues.missingReceipts.totalAmount > 0.005) {
+    var missAmt = round2(issues.missingReceipts.totalAmount);
+    parts.push(
+      "Spaceship has extra $" + missAmt + " " + typeName +
+      ". Check for missing receipts / wrong date."
+    );
+  }
+
+  // No issues -> balanced
+  if (parts.length === 0) {
+    return "Payment type balanced, no reconciliation needed.";
+  }
+
+  if (parts.length > 3) {
+    parts = parts.slice(0, 2);
+    parts.push("More issues detected. Review highlighted rows.");
+  }
+
+  return parts.join("\n");
+}
+
+
+function writePaymentMessages(sheet, perTypeIssues) {
+  Object.entries(perTypeIssues).forEach(function([typeName, issues]) {
+    var msg = buildPaymentMessage(typeName, issues);
+    var messageCol = issues.payment.message; // e.g. 'B', 'F', 'J', 'N'
+    var messageRow = CONFIG.message_row;     // 27
+    sheet.getRange(messageCol + messageRow).setValue(msg);
+  });
+}
+
+
+function applyReconciliation(sheet, diffs, solution) {
+  var perTypeIssues = buildPerTypeIssues(diffs, solution);
+
+  // Color cells
+  colorUnreleased(sheet, perTypeIssues);
+  colorMisclassified(sheet, perTypeIssues);
+
+  // Write message text into each payment type's message box
+  writePaymentMessages(sheet, perTypeIssues);
+}
+
+
+function balance() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.expandAllRowGroups();
+
+  // --- PHASE 1: Read and compute diffs ---
+  var diffs = getStockDiffs(sheet);
+
+  // --- PHASE 1.5: Spaceship subtotal input requirements ---------
+  // 1) Require at lease one spaceship subtotal cell to be non-blank
+  var spaceshipValues  = Object.values(diffs).map(function(d) {return d.spaceship; });
+
+  var hasSpaceshipInput = spaceshipValues.some(function(v) {
+    // Treat any non-empty, non-null value as "input" (0 is allowed).
+    return v !== "" && v !== null && v !== undefined;
+  });
+
+  if (!hasSpaceshipInput) {
+    // No spaceship subtotals at all -> ask user to input at lease one, don't proceed.
+    Object.entries(CONFIG.payments).forEach(function([name, payment]) {
+      var message_box = payment.message + CONFIG.message_row;
+      sheet.getRange(message_box).setValue(
+        "Enter at least one SPACESHIP TOTAL to begin diagnostic."
+      );
+    });
+    return false;
+  }
+
+  // 2) For any payment type where spaceship subtotal is blank, treat it as equal to stop subtotal (so diff becomes 0).
+  Object.values(diffs).forEach(function(d) {
+    if (d.spaceship === "" || d.spaceship === null || d.spaceship === undefined) {
+      d.spaceship = d.stock;
+      d.diff = d.stock - d.spaceship; // = 0
+    }
+  });
+
+  // Check if all types match exactly.
+  var allGood = Object.values(diffs).every(d => Math.abs(d.diff) < 0.0000001);
+
+  if (allGood) {
+    Object.entries(CONFIG.payments).forEach(([name, payment]) => {
+      sheet.getRange(`${payment.message}${CONFIG.message_row}`)
+      .setValue("All payment types balanced.");
+    });
+    return true;
+  }
+
+  // --- PHASE 2: Build STOCK row objects ---
+  var stockRows = buildStockRows(sheet);
+
+  // --- PHASE 3: Build UNIT representation (LIST of) of stock transactions ---
+  var units = buildStockUnits(stockRows);
+
+  // If there are mismatches but no units to reason about. 
+  if (units.length === 0) {
+    Object.entries(CONFIG.payments).forEach(function([name, payment]) {
+      var messageCell = payment.message + CONFIG.message_row;
+      sheet.getRange(messageCell).setValue(
+        "Mismatch detected; no stock transactions found to analyze. Check values."
+      );
+    });
+    return false;
+  }
+
+  // --- PHASE 4: Run DFS Diagnostic ------
+  var solution = null;
+  if (!allGood && units.length > 0) {
+    solution = reconcileUnits(diffs, units);
+  }
+  
+  if (!solution) {
+    // Helper couldn't find a consistent explanation
+    Object.entries(CONFIG.payments).forEach(function([name, payment]) {
+      var messageCell = payment.message + CONFIG.message_row;
+      sheet.getRange(messageCell).setValue(
+        "Mismatch detected; helper could not reconcile. Check amounts and payment types."
+      );
+    });
+    return false;
+  }
+
+  // --- PHASE 5: Apply visualization and messages.
+  applyReconciliation(sheet, diffs, solution);
+
+  return true;
+  
+}
+
+
+function findSubsetSum(nums, target) {
+  let result = [];
+  function backtrack(start, sum, subset, rows) {
+    if (sum == target) {
+      result = rows.slice(); // store row indices
+      return true;
+    }
+    if (sum > target) return false;
+
+    for (let i = start; i < nums.length; i++) {
+      if (backtrack(i+1, sum + nums[i], subset.concat(nums[i]), rows.concat(i))) return true;
+    }
+    return false;
+  }
+  backtrack(0, 0, [], []);
+  return result;
+}
+
+
+
+
+
+
